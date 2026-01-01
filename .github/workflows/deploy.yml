@@ -17,9 +17,11 @@ jobs:
       - name: Checkout code
         uses:  actions/checkout@v4
 
-      - name: Extract tag name
+      - name: Get tag from workflow run
         id: tag
-        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        run: |
+          TAG=$(git describe --tags --abbrev=0)
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@master
@@ -42,7 +44,7 @@ jobs:
             docker run -d \
               --name cryptarithm \
               --restart unless-stopped \
-              -p 80:5000 \
+              -p 8084:8080 \
               ${{ secrets.DOCKER_USERNAME }}/cryptarithm:${{ steps.tag.outputs.TAG }}
             
             # Logout from Docker Hub (cleanup)
