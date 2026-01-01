@@ -1,0 +1,48 @@
+name: Deploy to VPS
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses:  actions/checkout@v4
+
+      - name: Extract tag name
+        id: tag
+        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port:  22
+          script: |
+            # Login to Docker Hub
+            echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+            
+            # Pull the latest image
+            docker pull ${{ secrets.DOCKER_USERNAME }}/cryptarithm:${{ steps.tag.outputs.TAG }}
+            
+            # Stop and remove old container if it exists
+            docker stop cryptarithm || true
+            docker rm cryptarithm || true
+            
+            # Run the new container
+            docker run -d \
+              --name cryptarithm \
+              --restart unless-stopped \
+              -p 80:5000 \
+              ${{ secrets.DOCKER_USERNAME }}/cryptarithm:${{ steps.tag.outputs.TAG }}
+            
+            # Logout from Docker Hub (cleanup)
+            docker logout
+            
+            # Clean up old images
+            docker image prune -f
