@@ -18,21 +18,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses:  docker/setup-buildx-action@v3
 
-      - name: Debug - Check secrets exist
-        run: |
-          if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then
-            echo "ERROR: DOCKER_USERNAME is empty!"
-            exit 1
-          fi
-          if [ -z "${{ secrets.DOCKER_PASSWORD }}" ]; then
-            echo "ERROR: DOCKER_PASSWORD is empty!"
-            exit 1
-          fi
-          echo "✓ Both secrets are set"
-
-      - name: Log in to Docker Hub
+      - name:  Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -56,3 +44,46 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract tag name
+        id: tag
+        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: 43.156.58.159
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            # Login to Docker Hub
+            echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+            
+            # Pull the latest image
+            docker pull ${{ secrets.DOCKER_USERNAME }}/cryptarithm:${{ steps.tag.outputs.TAG }}
+            
+            # Stop and remove old container if it exists
+            docker stop cryptarithm || true
+            docker rm cryptarithm || true
+            
+            # Run the new container
+            docker run -d \
+              --name cryptarithm \
+              --restart unless-stopped \
+              -p 8084:8080 \
+              ${{ secrets.DOCKER_USERNAME }}/cryptarithm:${{ steps.tag.outputs.TAG }}
+            
+            # Logout from Docker Hub (cleanup)
+            docker logout
+            
+            # Clean up old images
+            docker image prune -f
