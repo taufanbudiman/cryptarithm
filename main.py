@@ -61,11 +61,11 @@ def main_page():
 
 
 # Initialize database on startup
-@app.on_event("startup")
-async def startup():
-    """Generate initial puzzles if database is empty."""
-    if db.get_puzzle_count() == 0:
-        generate_3_letter_puzzles(db, 500)
+# @app.on_event("startup")
+# async def startup():
+#     """Generate initial puzzles if database is empty."""
+#     if db.get_puzzle_count() == 0:
+#         generate_3_letter_puzzles(db, 500)
 
 
 # Integrate NiceGUI with FastAPI for Vercel deployment
