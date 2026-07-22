@@ -9,7 +9,6 @@ dependencies = [
 
 [tool.vercel]
 name = "cryptarithm"
-entrypoint = "python main.py"
 
 [tool.vercel.builds]
 image = "python:3.11-slim"
