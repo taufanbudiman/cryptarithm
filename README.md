@@ -21,17 +21,50 @@ cryptarithmetic-app/
 
 ## 🚀 Installation
 
-1. Install NiceGUI:
+1. Install dependencies:
 ```bash
-pip install nicegui
+pip install nicegui fastapi uvicorn
 ```
 
-2. Run the application:
+2. Run the application locally:
 ```bash
 python main.py
 ```
 
 3. Open browser at: `http://localhost:8080`
+
+## 🌐 Deployment
+
+### Vercel Deployment
+
+This app is configured for Vercel deployment using FastAPI integration:
+
+1. **Install Vercel CLI** (if not already installed):
+```bash
+npm i -g vercel
+```
+
+2. **Deploy to Vercel**:
+```bash
+vercel
+```
+
+3. **Configuration**:
+   - The `pyproject.toml` is configured with `entrypoint = "main:app"` for Vercel
+   - The app uses `ui.run_with(app)` to integrate NiceGUI with FastAPI
+   - Database initialization happens automatically on startup
+
+4. **Environment Variables** (optional):
+   - Set `STORAGE_SECRET` for persistent user storage if needed
+
+### Docker Deployment
+
+Alternatively, use Docker for deployment:
+
+```bash
+docker build -t cryptarithm .
+docker run -p 8080:8080 cryptarithm
+```
 
 ## 📦 Module Descriptions
 

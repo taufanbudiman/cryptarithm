@@ -1,9 +1,13 @@
+from fastapi import FastAPI
 from nicegui import ui
 from database import PuzzleDatabase
 from quiz_state import QuizState
 from generator import generate_3_letter_puzzles
 from ui_solver import create_solver_page
 from ui_quiz import create_quiz_page
+
+# Create FastAPI app for Vercel deployment
+app = FastAPI()
 
 # Initialize global instances
 db = PuzzleDatabase()
@@ -50,17 +54,19 @@ def main_page():
     show_page('solver')
 
 
-if __name__ in {"__main__", "__mp_main__"}:
-    # Generate initial puzzles if database is empty
+# Initialize database on startup
+@app.on_event("startup")
+async def startup():
+    """Generate initial puzzles if database is empty."""
     if db.get_puzzle_count() == 0:
-        print("Generating initial puzzle database...")
         generate_3_letter_puzzles(db, 500)
 
-    ui.run(
-        title='Cryptarithmetic App',
-        favicon='🔢',
-        dark=False,
-        reload=True,
-        show=True,
-        port=8080
-    )
+
+# Integrate NiceGUI with FastAPI for Vercel deployment
+ui.run_with(app)
+
+
+if __name__ in {"__main__", "__mp_main__"}:
+    # For local development, use uvicorn to run the FastAPI app
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8080)
