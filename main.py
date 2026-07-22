@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from nicegui import ui, run
+from nicegui import ui, run as nicegui_run
 from concurrent.futures import ThreadPoolExecutor
 from database import PuzzleDatabase
 from quiz_state import QuizState
@@ -7,6 +7,11 @@ from generator import generate_3_letter_puzzles
 from ui_solver import create_solver_page
 from ui_quiz import create_quiz_page
 
+
+def _serverless_setup():
+    nicegui_run.process_pool = ThreadPoolExecutor()
+
+nicegui_run.setup = _serverless_setup
 # Create FastAPI app for Vercel deployment
 app = FastAPI()
 
@@ -64,7 +69,6 @@ async def startup():
 
 
 # Integrate NiceGUI with FastAPI for Vercel deployment
-run.process_pool = ThreadPoolExecutor()
 ui.run_with(app)
 
 
