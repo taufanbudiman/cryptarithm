@@ -56,6 +56,9 @@ vercel
 
 4. **Environment Variables** (optional):
    - Set `STORAGE_SECRET` for persistent user storage if needed
+   - Set `DB_PATH` to customize database location (defaults to `/tmp/puzzles.db` on Vercel)
+
+**Note**: Vercel serverless functions use `/tmp` for writable storage. The SQLite database will be regenerated on each cold start. For production with persistent storage, consider using an external database (PostgreSQL, Redis) instead of SQLite.
 
 ### Docker Deployment
 

@@ -4,12 +4,16 @@ SQLite database management for puzzles
 
 import sqlite3
 import json
+import os
 
 
 class PuzzleDatabase:
     """Manage puzzle database with SQLite"""
 
-    def __init__(self, db_path='puzzles.db'):
+    def __init__(self, db_path=None):
+        # Use /tmp for Vercel serverless deployment (writable directory)
+        if db_path is None:
+            db_path = os.environ.get('DB_PATH', '/tmp/puzzles.db')
         self.db_path = db_path
         self.init_database()
 
